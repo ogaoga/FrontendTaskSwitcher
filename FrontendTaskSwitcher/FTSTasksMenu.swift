@@ -20,16 +20,16 @@ class FTSTasksMenu: NSMenu, NSMenuDelegate {
         self.delegate = self
         
         // setup
-        let systemStatusBar = NSStatusBar.systemStatusBar()
+        let systemStatusBar = NSStatusBar.system()
         let length : CGFloat = -1.0 // instead of NSVariableStatusItemLength
-        self.statusItem = systemStatusBar.statusItemWithLength(length)
+        self.statusItem = systemStatusBar.statusItem(withLength: length)
         self.statusItem.highlightMode = true
         self.statusItem.title = "📦"
         self.statusItem.menu = self
         
         // observe
         FTSProjects.sharedInstance.addObserver(self,
-            forKeyPath: "length", options: NSKeyValueObservingOptions.New, context: nil);
+                                               forKeyPath: "length", options: NSKeyValueObservingOptions.new, context: nil);
         
         // update
         self.updateProjects()
@@ -45,15 +45,15 @@ class FTSTasksMenu: NSMenu, NSMenuDelegate {
         panel.canCreateDirectories = false
         panel.allowsMultipleSelection = false
         let result = panel.runModal()
-        return (result == NSOKButton) ? panel.directoryURL : nil;
+        return (result == NSOKButton) ? panel.directoryURL! as NSURL : nil;
     }
 
     private func getTaskConfigFilePathAndType(directory: NSURL) -> [String: String]! {
-        let manager = NSFileManager.defaultManager()
-        if ( directory.path != nil && directory.path?.lengthOfBytesUsingEncoding(NSUTF8StringEncoding) > 0 ) {
+        let manager = FileManager.default
+        if ( directory.path != nil && directory.path?.lengthOfBytes(using: String.Encoding.utf8) ?? 0 > 0 ) {
             let path = directory.path!+"/Gruntfile.js"
-            if manager.fileExistsAtPath(path) {
-                let name = directory.path?.pathComponents.last as String?
+            if manager.fileExists(atPath: path) {
+                let name = directory.pathComponents?.last as String?
                 return ["name": name ?? "", "path": path, "directory": directory.path!, "type": "grunt"]
             }
         }
@@ -62,8 +62,8 @@ class FTSTasksMenu: NSMenu, NSMenuDelegate {
 
     private func removeProjects() {
         // remove current menu items
-        for item in self.itemArray as [NSMenuItem] {
-            if ( item.separatorItem ) {
+        for item in self.items as [NSMenuItem] {
+            if ( item.isSeparatorItem ) {
                 break
             }
             else {
@@ -78,15 +78,15 @@ class FTSTasksMenu: NSMenu, NSMenuDelegate {
         // add projects
         if ( FTSProjects.sharedInstance.length > 0 ) {
             // add new menu items
-            for (path, item) in FTSProjects.sharedInstance.data {
-                let menuItem = NSMenuItem(title: item["name"] as String, action: nil, keyEquivalent: "")
-                menuItem.enabled = true
+            for (_, item) in FTSProjects.sharedInstance.data {
+                let menuItem = NSMenuItem(title: item["name"] as! String, action: nil, keyEquivalent: "")
+                menuItem.isEnabled = true
                 menuItem.submenu = FTSActionMenu(params: item)
-                self.insertItem(menuItem, atIndex: 0)
+                self.insertItem(menuItem, at: 0)
             }
         }
         else {
-            self.insertItem(NSMenuItem(title: "No project", action: "", keyEquivalent: ""), atIndex: 0)
+            self.insertItem(NSMenuItem(title: "No project", action: nil, keyEquivalent: ""), at: 0)
         }
     }
 
@@ -95,7 +95,7 @@ class FTSTasksMenu: NSMenu, NSMenuDelegate {
     /**
     *  MARK: Observe
     */
-    override func observeValueForKeyPath(keyPath: String, ofObject object: AnyObject, change: [NSObject : AnyObject], context: UnsafeMutablePointer<Void>) {
+    func observeValueForKeyPath(keyPath: String, ofObject object: AnyObject, change: [NSObject : AnyObject], context: UnsafeMutableRawPointer) {
         if keyPath == "length" {
             self.updateProjects()
         }
@@ -107,9 +107,9 @@ class FTSTasksMenu: NSMenu, NSMenuDelegate {
     @IBAction func addProject(sender: AnyObject) {
         let directoryURL = self.getDirectoryURL()
         if ( directoryURL != nil ) {
-            let data = self.getTaskConfigFilePathAndType(directoryURL)
-            if ( data != nil && data["path"] != nil ) {
-                FTSProjects.sharedInstance.add(data["path"]!, project: data)
+            let data = self.getTaskConfigFilePathAndType(directory: directoryURL!)
+            if ( data != nil && data?["path"] != nil ) {
+                FTSProjects.sharedInstance.add(path: (data?["path"])!, project: data! as Dictionary<String, AnyObject>)
             }
         }
         else {
@@ -118,14 +118,14 @@ class FTSTasksMenu: NSMenu, NSMenuDelegate {
     }
 
     // MARK: - Menu Delegate
-    func menuWillOpen(menu: NSMenu) {
+    func menuWillOpen(_ menu: NSMenu) {
         
         // set running indicator
-        let items = self.itemArray
+        let items = self.items
         for item in items as [NSMenuItem] {
             item.state = NSOffState
-            if var submenu = item.submenu as? FTSActionMenu {
-                if let task = submenu.task? {
+            if let submenu = item.submenu as? FTSActionMenu {
+                if let task = submenu.task {
                     if ( task.isRunning() ) {
                         item.state = NSOnState
                     }

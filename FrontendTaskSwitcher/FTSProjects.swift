@@ -28,14 +28,14 @@ class FTSProjects: NSObject {
     // MARK: -
     
     func save() {
-        let defaults = NSUserDefaults.standardUserDefaults()
-        defaults.setObject(self.data, forKey: "data")
+        let defaults = UserDefaults.standard
+        defaults.set(self.data, forKey: "data")
         defaults.synchronize()
     }
     
     func load() {
-        let defaults = NSUserDefaults.standardUserDefaults()
-        var _data = defaults.objectForKey("data") as? Dictionary<String, Dictionary<String, AnyObject>>
+        let defaults = UserDefaults.standard
+        let _data = defaults.object(forKey: "data") as? Dictionary<String, Dictionary<String, AnyObject>>
         if ( _data != nil ) {
             self.data = _data!
             self.length = self.data.count
@@ -52,22 +52,22 @@ class FTSProjects: NSObject {
     
     subscript(path: String) -> Dictionary<String, Dictionary<String, String>> {
         get {
-            return self.data[path] as Dictionary<String, Dictionary<String, String>>
+            return self.data[path] as! Dictionary<String, Dictionary<String, String>>
         }
         set(item) {
-            self.add(path, project: item)
+            self.add(path: path, project: item as Dictionary<String, AnyObject>)
         }
     }
     
     func add(path: String, project: Dictionary<String, AnyObject>) {
-        if ( path.lengthOfBytesUsingEncoding(NSUTF8StringEncoding) > 0 ) {
+        if ( path.lengthOfBytes(using: String.Encoding.utf8) > 0 ) {
             self.data[path] = project
             self.length = self.data.count
         }
     }
     
     func removeValueForKey(key: String) {
-        self.data.removeValueForKey(key)
+        data.removeValue(forKey: key)
         self.length = self.data.count
     }
 }

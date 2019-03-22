@@ -1,0 +1,30 @@
+PODS:
+  - DSUnixTask (0.1.1):
+    - DSUnixTask/Core (= 0.1.1)
+    - DSUnixTask/XPCClient (= 0.1.1)
+    - DSUnixTask/XPCService (= 0.1.1)
+  - DSUnixTask/Core (0.1.1):
+    - DSUnixTask/Core/TaskManagers (= 0.1.1)
+    - DSUnixTask/Core/TaskRunner (= 0.1.1)
+    - DSUnixTask/Core/Tasks (= 0.1.1)
+  - DSUnixTask/Core/TaskManagers (0.1.1)
+  - DSUnixTask/Core/TaskRunner (0.1.1)
+  - DSUnixTask/Core/Tasks (0.1.1)
+  - DSUnixTask/XPCClient (0.1.1):
+    - DSUnixTask/Core
+  - DSUnixTask/XPCService (0.1.1):
+    - DSUnixTask/Core/TaskRunner
+
+DEPENDENCIES:
+  - DSUnixTask (~> 0.1)
+
+SPEC REPOS:
+  https://github.com/cocoapods/specs.git:
+    - DSUnixTask
+
+SPEC CHECKSUMS:
+  DSUnixTask: 44a0f06b704797041a92c6d4eab311f2adfb0255
+
+PODFILE CHECKSUM: fde511844c8c63fd84ac1780b5dbd25dd534105f
+
+COCOAPODS: 1.6.1
