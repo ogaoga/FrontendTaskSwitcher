@@ -10,7 +10,7 @@ import Cocoa
 
 class FTSTask: NSObject {
     
-    private var _task : NSTask!
+    private var _task : Process!
     
     deinit {
         if ( self.isRunning() ) {
@@ -20,25 +20,25 @@ class FTSTask: NSObject {
     
     private func initializeTask() {
         if ( _task == nil ) {
-            _task = NSTask()
+            _task = Process()
         }
         _task.environment = ["PATH": "/bin:/usr/bin:/usr/local/bin"]
         
-        let outPipe = NSPipe()
+        let outPipe = Pipe()
         _task.standardOutput = outPipe
-        let errorPipe = NSPipe()
+        let errorPipe = Pipe()
         _task.standardError = errorPipe
         
-        let nc = NSNotificationCenter.defaultCenter()
+        let nc = NotificationCenter.default
         nc.addObserver(self,
-            selector: Selector("readCompleted:"),
-            name: NSFileHandleReadCompletionNotification,
+                       selector: Selector(("readCompleted:")),
+            name: FileHandle.readCompletionNotification,
             object:outPipe.fileHandleForReading )
         outPipe.fileHandleForReading.readInBackgroundAndNotify()
         
         nc.addObserver(self,
-            selector: Selector("taskDidTerminated:"),
-            name: NSTaskDidTerminateNotification,
+                       selector: Selector(("taskDidTerminated:")),
+            name: Process.didTerminateNotification,
             object: _task)
     }
 
@@ -51,7 +51,7 @@ class FTSTask: NSObject {
             _task.launchPath = "/bin/sh"
             _task.arguments = ["-c", command]
             _task.launch()
-            println("task start")
+            print("task start")
         }
     }
     
@@ -62,20 +62,20 @@ class FTSTask: NSObject {
     }
     
     func isRunning() -> Bool {
-        return _task != nil && _task.running
+        return _task != nil && _task.isRunning
     }
     
     func readCompleted(notification: NSNotification) {
         let data: NSData? = notification.userInfo?[NSFileHandleNotificationDataItem] as? NSData
-        if data?.length > 0 {
-            println(NSString(data: data!, encoding: NSUTF8StringEncoding)!)
+        if (data != nil) && data!.length > 0 {
+            print(NSString(data: data! as Data, encoding: String.Encoding.utf8.rawValue)!)
         }
     }
     
     func taskDidTerminated(notification: NSNotification) {
-        println("taskDidTerminated")
-        let nc = NSNotificationCenter.defaultCenter()
-        nc.removeObserver(self, name: NSTaskDidTerminateNotification, object: _task)
+        print("taskDidTerminated")
+        let nc = NotificationCenter.default
+        nc.removeObserver(self, name: Process.didTerminateNotification, object: _task)
         _task = nil
     }
 
